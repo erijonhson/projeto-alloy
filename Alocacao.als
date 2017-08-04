@@ -3,11 +3,9 @@
  TODO:
  [OK] cada Professor ministra duas ou três Disciplinas de 4 horas semanais 
           ~ temos que tratar essa questão de horário? ~ 
- [    ] cada Professor pode Orientar Alunos de Graduação 
-          ~ Alunos tornam-se uma assinatura (sig)? ~ 
+ [OK] cada Professor pode Orientar Alunos de Graduação  
  [    ] se Professor Doutor, então: 
-         [    ] pode orientar Alunos de Mestrado ou Doutorado
-                 ~ Seriam 3 tipos de Aluno, então? (Graduação, Mestrado e Doutorado)~ 
+         [OK] pode orientar Alunos de Mestrado ou Doutorado
          [    ] pode ministrar aulas na pós-graduação, cumulativamente às atividades que já desenvolve 
                 (estas disciplinas entram na cota mencionada acima) 
                  ~ então teremos Disciplina de Graduação e de Pós-Graduação? ~
@@ -21,40 +19,69 @@ module AlocacaoProfessoresDSC
 --------------------------------------------------------------------------------------
 --   ASSINATURAS (Mínimo 5, com ao menos 1 herança - extends ou in)
 --------------------------------------------------------------------------------------
-sig Professor {
-	atividades : set Atividade
+abstract sig Docente {
+	disciplinas : set Disciplina,
+	orientandos : set Orientando
 }
 
-sig Atividade{}
+sig Professor extends Docente {}
+sig Doutor extends Docente {}
 
-sig Disciplina extends Atividade{}
+abstract sig Disciplina {}
+sig AulaDeGraduacao extends Disciplina {}
+sig AulaDePosGraduacao extends Disciplina {} -- só Doutor pode 
+
+abstract sig Orientando {}
+sig Graduando extends Orientando {}
+sig Mestrando extends Orientando {} -- só Doutor pode
+sig Doutorando extends Orientando {} -- só Doutor pode
 
 --------------------------------------------------------------------------------------
 --   FATOS 
 --------------------------------------------------------------------------------------
 
-fact ProfessorTemDuasOuTresDisciplinas {
-	all p : Professor | professorComDuasOuTresDisciplinas[p]
+fact DocenteTemDuasOuTresDisciplinas {
+	all d : Docente | docentesComDuasOuTresDisciplinas[d]
 }
 
-fact DisciplinaTemUmProfessor {
-	all a : Atividade | one a.~atividades
+fact DisciplinaTemApenasUmProfessor {
+	all d : Disciplina | one d.~disciplinas
+}
+
+fact OrientandoTemApenasUmOrientador {
+	all o : Orientando | one o.~orientandos
+}
+
+fact ProfessorOrientaApenasGraduando {
+	all p : Professor | professorOrientaApenasGraduando[p]
 }
 
 --------------------------------------------------------------------------------------
 --   PREDICADOS (Mínimo 3) 
 --------------------------------------------------------------------------------------
 
-pred professorComDuasOuTresDisciplinas[p : Professor] {
-	#(disciplinasDeProfessor[p]) >= 2 && #(disciplinasDeProfessor[p]) <= 3
+pred docentesComDuasOuTresDisciplinas[d : Docente] {
+	#(disciplinasDeDocente[d]) >= 2 && #(disciplinasDeDocente[d]) <= 3
+}
+
+pred professorOrientaApenasGraduando[p : Professor] {
+	#(mestrandosDeDocente[p]) = 0 && #(doutorandosDeDocente[p]) = 0
 }
 
 --------------------------------------------------------------------------------------
 --   FUNÇÕES (Mínimo 3) 
 --------------------------------------------------------------------------------------
 
-fun disciplinasDeProfessor [p : Professor]  : set Atividade {
-	p.atividades & Disciplina
+fun disciplinasDeDocente [d : Docente]  : set Disciplina {
+	d.disciplinas
+}
+
+fun mestrandosDeDocente [d : Docente]  : set Orientando {
+	d.orientandos & Mestrando
+}
+
+fun doutorandosDeDocente [d : Docente]  : set Orientando {
+	d.orientandos & Doutorando
 }
 
 --------------------------------------------------------------------------------------
@@ -62,7 +89,7 @@ fun disciplinasDeProfessor [p : Professor]  : set Atividade {
 --------------------------------------------------------------------------------------
 
 assert todoProfessorTemDuasOuTresDisciplinas {
-    all p : Professor | #(disciplinasDeProfessor[p]) >= 2 && #(disciplinasDeProfessor[p]) <= 3
+    all d : Docente | #(disciplinasDeDocente[d]) >= 2 && #(disciplinasDeDocente[d]) <= 3
 }
 
 -- check todoProfessorTemDuasOuTresDisciplinas for 10
@@ -73,4 +100,4 @@ assert todoProfessorTemDuasOuTresDisciplinas {
 
 pred show[]{}
 
-run show for 10
+run show for 8
