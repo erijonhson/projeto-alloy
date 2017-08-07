@@ -9,7 +9,7 @@
          [OK] pode ministrar aulas na pós-graduação, cumulativamente às atividades que já desenvolve 
                 (estas disciplinas entram na cota mencionada acima) 
          [OK] Não Doutores não podem ministrar aulas de PosGraduação
- [    ] todos os Professores devem ter 8 atividades de alocação, cada uma de duas ou quatro horas; 
+ [OK] todos os Professores devem ter 8 atividades de alocação, cada uma de duas ou quatro horas; 
         caso contrário, o professor estará classificado como Atividade Insuficiente. 
          ~ temos que tratar essa questão de horário? ~ 
 */
@@ -136,10 +136,9 @@ assert todoProfessorTemApenasDisciplinasDeGraduacao {
 -- check todoProfessorTemApenasDisciplinasDeGraduacao for 20
 
 assert todoDocenteQueTemMenosQueOitoCadeirasTemAtividadeInsuficiente{
-	all d: Docente | #(d.disciplinas + d.orientandos) >8 || docenteComAtividadeInsuficiente[d]
+	all d: Docente | #(d.disciplinas + d.orientandos) <8 || docenteComAtividadeInsuficiente[d]
 }
 
-check todoDocenteQueTemMenosQueOitoCadeirasTemAtividadeInsuficiente
 
 --------------------------------------------------------------------------------------
 --   SHOW 
