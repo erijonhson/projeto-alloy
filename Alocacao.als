@@ -30,12 +30,12 @@ sig Doutor extends Docente {}
 
 abstract sig Disciplina{}
 sig DisciplinaDeGraduacao extends Disciplina {}
-sig DisciplinaDePosGraduacao extends Disciplina {} -- só Doutor pode 
+sig DisciplinaDePosGraduacao extends Disciplina {} -- Apenas professores com titulo de doutor
 
 abstract sig Orientando{}
 sig Graduando extends Orientando {}
-sig Mestrando extends Orientando {} -- só Doutor pode
-sig Doutorando extends Orientando {} -- só Doutor pode
+sig Mestrando extends Orientando {} -- Apenas professores com titulo de doutor
+sig Doutorando extends Orientando {} -- Apenas professores com titulo de doutor
 
 --------------------------------------------------------------------------------------
 --   FATOS 
@@ -48,7 +48,6 @@ fact DocenteTemDuasOuTresDisciplinas {
 fact DocentesComAtividadesInsuficientes{ -- falta assert
 	all d:Docente | docentesComMaisDeOitoAtividades[d] || docenteComAtividadeInsuficiente[d]
 }
-
 
 fact ProfessorTemDuasOuTresDisciplinas {
 	all d : Docente | docentesComDuasOuTresDisciplinas[d]
@@ -135,10 +134,6 @@ assert todoProfessorTemApenasDisciplinasDeGraduacao {
     all p : Professor | #(disciplinaDePosGraduacaoDeDocente[p]) = 0
 }
 -- check todoProfessorTemApenasDisciplinasDeGraduacao for 20
-
-assert todoProfessorQueTemMenosQueOitoCadeirasTemAtividadeInsuficiente{
-	all p: Professor | #(p.disciplinas + p.orientandos) <8 && docenteComAtividadeInsuficiente[p]
-}
 
 assert todoDocenteQueTemMenosQueOitoCadeirasTemAtividadeInsuficiente{
 	all d: Docente | #(d.disciplinas + d.orientandos) >8 || docenteComAtividadeInsuficiente[d]
