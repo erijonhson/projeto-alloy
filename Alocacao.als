@@ -45,7 +45,7 @@ fact DocenteTemDuasOuTresDisciplinas {
 	all d : Docente | docentesComDuasOuTresDisciplinas[d]
 }
 
-fact DocentesComAtividadesInsuficientes{ -- falta assert
+fact DocentesComAtividadesInsuficientes{
 	all d:Docente | docentesComMaisDeOitoAtividades[d] || docenteComAtividadeInsuficiente[d]
 }
 
