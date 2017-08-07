@@ -23,25 +23,33 @@ abstract sig Docente {
 	disciplinas : set Disciplina,
 	orientandos : set Orientando
 }
- 
 
+sig AtividadeInsuficiente in Docente{}
 sig Professor extends Docente {}
 sig Doutor extends Docente {}
 
-abstract sig Disciplina {}
+abstract sig Disciplina{}
 sig DisciplinaDeGraduacao extends Disciplina {}
-sig DisciplinaDePosGraduacao extends Disciplina {} -- apenas para professor doutor
+sig DisciplinaDePosGraduacao extends Disciplina {} -- só Doutor pode 
 
-abstract sig Orientando {}
+abstract sig Orientando{}
 sig Graduando extends Orientando {}
-sig Mestrando extends Orientando {} -- apenas para professor com titulo de doutor
-sig Doutorando extends Orientando {} -- apenas para professor com titulo de doutor
+sig Mestrando extends Orientando {} -- só Doutor pode
+sig Doutorando extends Orientando {} -- só Doutor pode
 
 --------------------------------------------------------------------------------------
 --   FATOS 
 --------------------------------------------------------------------------------------
 
 fact DocenteTemDuasOuTresDisciplinas {
+	all d : Docente | docentesComDuasOuTresDisciplinas[d]
+}
+
+fact DocentesComAtividadesInsuficientes{ -- falta assert
+	all d:Docente | docentesComMaisDeOitoAtividades[d] || docenteComAtividadeInsuficiente[d]
+}
+
+fact ProfessorTemDuasOuTresDisciplinas {
 	all d : Docente | docentesComDuasOuTresDisciplinas[d]
 }
 
@@ -65,9 +73,18 @@ fact ProfessorLecionaApenasDisciplinaDeGraduacao {
 --   PREDICADOS (Mínimo 3) 
 --------------------------------------------------------------------------------------
 
+pred docenteComAtividadeInsuficiente[d : Docente]{
+	 d in AtividadeInsuficiente
+}
+
+pred docentesComMaisDeOitoAtividades[d : Docente]{
+	#(d.disciplinas + d.orientandos) >=8
+}
+
 pred docentesComDuasOuTresDisciplinas[d : Docente] {
 	#(disciplinasDeDocente[d]) >= 2 && #(disciplinasDeDocente[d]) <= 3
 }
+
 
 pred professorOrientaApenasGraduando[p : Professor] {
 	#(mestrandosDeDocente[p]) = 0 && #(doutorandosDeDocente[p]) = 0
@@ -118,6 +135,8 @@ assert todoProfessorTemApenasDisciplinasDeGraduacao {
 }
 
 -- check todoProfessorTemApenasDisciplinasDeGraduacao for 20
+
+
 
 --------------------------------------------------------------------------------------
 --   SHOW 
