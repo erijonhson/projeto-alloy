@@ -4,11 +4,11 @@
  [OK] cada Professor ministra duas ou três Disciplinas de 4 horas semanais 
           ~ temos que tratar essa questão de horário? ~ 
  [OK] cada Professor pode Orientar Alunos de Graduação  
- [    ] se Professor Doutor, então: 
+ [OK] se Professor Doutor, então: 
          [OK] pode orientar Alunos de Mestrado ou Doutorado
-         [    ] pode ministrar aulas na pós-graduação, cumulativamente às atividades que já desenvolve 
+         [OK] pode ministrar aulas na pós-graduação, cumulativamente às atividades que já desenvolve 
                 (estas disciplinas entram na cota mencionada acima) 
-                 ~ então teremos Disciplina de Graduação e de Pós-Graduação? ~
+         [OK] Não Doutores não podem ministrar aulas de PosGraduação
  [    ] todos os Professores devem ter 8 atividades de alocação, cada uma de duas ou quatro horas; 
         caso contrário, o professor estará classificado como Atividade Insuficiente. 
          ~ temos que tratar essa questão de horário? ~ 
@@ -23,18 +23,19 @@ abstract sig Docente {
 	disciplinas : set Disciplina,
 	orientandos : set Orientando
 }
+ 
 
 sig Professor extends Docente {}
 sig Doutor extends Docente {}
 
 abstract sig Disciplina {}
-sig AulaDeGraduacao extends Disciplina {}
-sig AulaDePosGraduacao extends Disciplina {} -- só Doutor pode 
+sig DisciplinaDeGraduacao extends Disciplina {}
+sig DisciplinaDePosGraduacao extends Disciplina {} -- apenas para professor doutor
 
 abstract sig Orientando {}
 sig Graduando extends Orientando {}
-sig Mestrando extends Orientando {} -- só Doutor pode
-sig Doutorando extends Orientando {} -- só Doutor pode
+sig Mestrando extends Orientando {} -- apenas para professor com titulo de doutor
+sig Doutorando extends Orientando {} -- apenas para professor com titulo de doutor
 
 --------------------------------------------------------------------------------------
 --   FATOS 
@@ -44,16 +45,20 @@ fact DocenteTemDuasOuTresDisciplinas {
 	all d : Docente | docentesComDuasOuTresDisciplinas[d]
 }
 
-fact DisciplinaTemApenasUmProfessor {
+fact DisciplinaTemApenasUmDoutor { -- falta assert 
 	all d : Disciplina | one d.~disciplinas
 }
 
-fact OrientandoTemApenasUmOrientador {
+fact OrientandoTemApenasUmOrientador { -- falta assert
 	all o : Orientando | one o.~orientandos
 }
 
 fact ProfessorOrientaApenasGraduando {
 	all p : Professor | professorOrientaApenasGraduando[p]
+}
+
+fact ProfessorLecionaApenasDisciplinaDeGraduacao {
+	all p : Professor | professorLecionaApenasDisciplinaDeGraduacao[p]
 }
 
 --------------------------------------------------------------------------------------
@@ -66,6 +71,10 @@ pred docentesComDuasOuTresDisciplinas[d : Docente] {
 
 pred professorOrientaApenasGraduando[p : Professor] {
 	#(mestrandosDeDocente[p]) = 0 && #(doutorandosDeDocente[p]) = 0
+}
+
+pred professorLecionaApenasDisciplinaDeGraduacao[p : Professor] {
+	#(disciplinaDePosGraduacaoDeDocente[p]) = 0
 }
 
 --------------------------------------------------------------------------------------
@@ -84,15 +93,31 @@ fun doutorandosDeDocente [d : Docente]  : set Orientando {
 	d.orientandos & Doutorando
 }
 
+fun disciplinaDePosGraduacaoDeDocente [d : Docente] : set Disciplina {
+	d.disciplinas & DisciplinaDePosGraduacao
+}
+
 --------------------------------------------------------------------------------------
 --   ASSERTS  (Mínimo 3 definições e 3 verificações) 
 --------------------------------------------------------------------------------------
 
-assert todoProfessorTemDuasOuTresDisciplinas {
+assert todoDocenteTemDuasOuTresDisciplinas {
     all d : Docente | #(disciplinasDeDocente[d]) >= 2 && #(disciplinasDeDocente[d]) <= 3
 }
 
--- check todoProfessorTemDuasOuTresDisciplinas for 10
+-- check todoDocenteTemDuasOuTresDisciplinas for 20
+
+assert todoProfessorOrientaApenasGraduando {
+    all p : Professor | #(mestrandosDeDocente[p]) = 0 && #(doutorandosDeDocente[p]) = 0
+}
+
+-- check todoProfessorOrientaApenasGraduando for 20
+
+assert todoProfessorTemApenasDisciplinasDeGraduacao {
+    all p : Professor | #(disciplinaDePosGraduacaoDeDocente[p]) = 0
+}
+
+-- check todoProfessorTemApenasDisciplinasDeGraduacao for 20
 
 --------------------------------------------------------------------------------------
 --   SHOW 
