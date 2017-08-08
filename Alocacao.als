@@ -57,7 +57,7 @@ fact DisciplinaTemApenasUmDoutor { -- falta assert
 	all d : Disciplina | one d.~disciplinas
 }
 
-fact OrientandoTemApenasUmOrientador { -- falta assert
+fact OrientandoTemApenasUmOrientador { 
 	all o : Orientando | one o.~orientandos
 }
 
@@ -139,6 +139,11 @@ assert todoDocenteQueTemMenosQueOitoCadeirasTemAtividadeInsuficiente{
 	all d: Docente | #(d.disciplinas + d.orientandos) <8 || docenteComAtividadeInsuficiente[d]
 }
 
+assert todoOrientandoTemApenasUmOrientador {
+	all o:Orientando | #(o.~orientandos) = 1
+}
+
+-- check todoOrientandoTemApenasUmOrientador for 20
 
 --------------------------------------------------------------------------------------
 --   SHOW 
