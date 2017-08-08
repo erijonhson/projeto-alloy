@@ -24,18 +24,20 @@ abstract sig Docente {
 	orientandos : set Orientando
 }
 
-sig AtividadeInsuficiente in Docente{}
+sig AtividadeSuficiente in Docente {}
+sig AtividadeInsuficiente in Docente {}
+
 sig Professor extends Docente {}
 sig Doutor extends Docente {}
 
-abstract sig Disciplina{}
+abstract sig Disciplina {}
 sig DisciplinaDeGraduacao extends Disciplina {}
-sig DisciplinaDePosGraduacao extends Disciplina {} -- Apenas professores com titulo de doutor
+sig DisciplinaDePosGraduacao extends Disciplina {} -- Apenas professores com titulo de Doutor
 
 abstract sig Orientando{}
 sig Graduando extends Orientando {}
-sig Mestrando extends Orientando {} -- Apenas professores com titulo de doutor
-sig Doutorando extends Orientando {} -- Apenas professores com titulo de doutor
+sig Mestrando extends Orientando {} -- Apenas professores com titulo de Doutor
+sig Doutorando extends Orientando {} -- Apenas professores com titulo de Doutor
 
 --------------------------------------------------------------------------------------
 --   FATOS 
@@ -45,12 +47,12 @@ fact DocenteTemDuasOuTresDisciplinas {
 	all d : Docente | docentesComDuasOuTresDisciplinas[d]
 }
 
-fact DocentesComAtividadesInsuficientes{
-	all d:Docente | docentesComMaisDeOitoAtividades[d] || docenteComAtividadeInsuficiente[d]
+fact DocenteComAtividadesSuficientes {
+	all d: Docente | docenteTemOitoOuMaisAtividades[d] <=> docenteComAtividadeSuficiente[d]
 }
 
-fact ProfessorTemDuasOuTresDisciplinas {
-	all d : Docente | docentesComDuasOuTresDisciplinas[d]
+fact DocentesComAtividadesInsuficientes {
+	all d: Docente | docenteTemMenosDeOitoAtividades[d] <=> docenteComAtividadeInsuficiente[d]
 }
 
 fact DisciplinaTemApenasUmDoutor { -- falta assert 
@@ -73,21 +75,28 @@ fact ProfessorLecionaApenasDisciplinaDeGraduacao {
 --   PREDICADOS (Mínimo 3) 
 --------------------------------------------------------------------------------------
 
-pred docenteComAtividadeInsuficiente[d : Docente]{
+pred docentesComDuasOuTresDisciplinas[d : Docente] {
+	#(d.disciplinas) >= 2 and #(d.disciplinas) <= 3
+}
+
+pred docenteTemOitoOuMaisAtividades[d : Docente] {
+	#(d.disciplinas + d.orientandos) >= 8
+}
+
+pred docenteComAtividadeSuficiente[d : Docente] {
+	 d in AtividadeSuficiente
+}
+
+pred docenteTemMenosDeOitoAtividades[d : Docente] {
+	#(d.disciplinas + d.orientandos) < 8
+}
+
+pred docenteComAtividadeInsuficiente[d : Docente] {
 	 d in AtividadeInsuficiente
 }
 
-pred docentesComMaisDeOitoAtividades[d : Docente]{
-	#(d.disciplinas + d.orientandos) >=8
-}
-
-pred docentesComDuasOuTresDisciplinas[d : Docente] {
-	#(disciplinasDeDocente[d]) >= 2 && #(disciplinasDeDocente[d]) <= 3
-}
-
-
 pred professorOrientaApenasGraduando[p : Professor] {
-	#(mestrandosDeDocente[p]) = 0 && #(doutorandosDeDocente[p]) = 0
+	#(mestrandosDeDocente[p]) = 0 and #(doutorandosDeDocente[p]) = 0
 }
 
 pred professorLecionaApenasDisciplinaDeGraduacao[p : Professor] {
@@ -97,10 +106,6 @@ pred professorLecionaApenasDisciplinaDeGraduacao[p : Professor] {
 --------------------------------------------------------------------------------------
 --   FUNÇÕES (Mínimo 3) 
 --------------------------------------------------------------------------------------
-
-fun disciplinasDeDocente [d : Docente]  : set Disciplina {
-	d.disciplinas
-}
 
 fun mestrandosDeDocente [d : Docente]  : set Orientando {
 	d.orientandos & Mestrando
@@ -119,31 +124,40 @@ fun disciplinaDePosGraduacaoDeDocente [d : Docente] : set Disciplina {
 --------------------------------------------------------------------------------------
 
 assert todoDocenteTemDuasOuTresDisciplinas {
-    all d : Docente | #(disciplinasDeDocente[d]) >= 2 && #(disciplinasDeDocente[d]) <= 3
+    all d : Docente | #(d.disciplinas) >= 2 and #(d.disciplinas) <= 3
 }
 
--- check todoDocenteTemDuasOuTresDisciplinas for 20
+check todoDocenteTemDuasOuTresDisciplinas for 20
 
 assert todoProfessorOrientaApenasGraduando {
-    all p : Professor | #(mestrandosDeDocente[p]) = 0 && #(doutorandosDeDocente[p]) = 0
+    all p : Professor | #(mestrandosDeDocente[p]) = 0 and #(doutorandosDeDocente[p]) = 0
 }
 
--- check todoProfessorOrientaApenasGraduando for 20
+check todoProfessorOrientaApenasGraduando for 20
 
 assert todoProfessorTemApenasDisciplinasDeGraduacao {
     all p : Professor | #(disciplinaDePosGraduacaoDeDocente[p]) = 0
 }
--- check todoProfessorTemApenasDisciplinasDeGraduacao for 20
 
-assert todoDocenteQueTemMenosQueOitoCadeirasTemAtividadeInsuficiente{
-	all d: Docente | #(d.disciplinas + d.orientandos) <8 || docenteComAtividadeInsuficiente[d]
+check todoProfessorTemApenasDisciplinasDeGraduacao for 20
+
+assert todoDocenteQueTemMenosQueOitoCadeirasTemAtividadeInsuficiente {
+	all d: Docente | #(d.disciplinas + d.orientandos) < 8 => docenteComAtividadeInsuficiente[d]
 }
+
+check todoDocenteQueTemMenosQueOitoCadeirasTemAtividadeInsuficiente for 20
 
 assert todoOrientandoTemApenasUmOrientador {
-	all o:Orientando | #(o.~orientandos) = 1
+	all o: Orientando | #(o.~orientandos) = 1
 }
 
--- check todoOrientandoTemApenasUmOrientador for 20
+check todoOrientandoTemApenasUmOrientador for 20
+
+assert todoDocenteTemClassificacaoDeAtividadeUnica {
+	all d: Docente | (d in AtividadeSuficiente and d !in AtividadeInsuficiente) or (d in AtividadeInsuficiente and d !in AtividadeSuficiente)
+}
+
+check todoDocenteTemClassificacaoDeAtividadeUnica for 20
 
 --------------------------------------------------------------------------------------
 --   SHOW 
