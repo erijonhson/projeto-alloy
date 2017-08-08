@@ -28,10 +28,9 @@ sig AtividadeInsuficiente in Docente{}
 sig Professor extends Docente {}
 sig Doutor extends Docente {}
 
-abstract sig Atividade{}
-sig DisciplinaDeGraduacao extends Atividade {}
-sig DisciplinaDePosGraduacao extends Atividade {} -- Apenas professores com titulo de doutor
-sig AtividadeExtra extends Atividade {} -- Projetos, atividades administrativas, etc
+abstract sig Disciplina{}
+sig DisciplinaDeGraduacao extends Disciplina {}
+sig DisciplinaDePosGraduacao extends Disciplina {} -- Apenas professores com titulo de doutor
 
 abstract sig Orientando{}
 sig Graduando extends Orientando {}
@@ -55,10 +54,10 @@ fact ProfessorTemDuasOuTresDisciplinas {
 }
 
 fact DisciplinaTemApenasUmDoutor { -- falta assert 
-	all d : Atividade | one d.~disciplinas
+	all d : Disciplina | one d.~disciplinas
 }
 
-fact OrientandoTemApenasUmOrientador {
+fact OrientandoTemApenasUmOrientador { 
 	all o : Orientando | one o.~orientandos
 }
 
@@ -99,7 +98,7 @@ pred professorLecionaApenasDisciplinaDeGraduacao[p : Professor] {
 --   FUNÇÕES (Mínimo 3) 
 --------------------------------------------------------------------------------------
 
-fun disciplinasDeDocente [d : Docente]  : set Atividade {
+fun disciplinasDeDocente [d : Docente]  : set Disciplina {
 	d.disciplinas
 }
 
@@ -111,7 +110,7 @@ fun doutorandosDeDocente [d : Docente]  : set Orientando {
 	d.orientandos & Doutorando
 }
 
-fun disciplinaDePosGraduacaoDeDocente [d : Docente] : set Atividade {
+fun disciplinaDePosGraduacaoDeDocente [d : Docente] : set Disciplina {
 	d.disciplinas & DisciplinaDePosGraduacao
 }
 
@@ -139,7 +138,6 @@ assert todoProfessorTemApenasDisciplinasDeGraduacao {
 assert todoDocenteQueTemMenosQueOitoCadeirasTemAtividadeInsuficiente{
 	all d: Docente | #(d.disciplinas + d.orientandos) <8 || docenteComAtividadeInsuficiente[d]
 }
-
 
 assert todoOrientandoTemApenasUmOrientador {
 	all o:Orientando | #(o.~orientandos) = 1
