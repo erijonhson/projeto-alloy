@@ -3,6 +3,7 @@
  TODO:
  [OK] cada Professor ministra duas ou três Disciplinas de 4 horas semanais 
           ~ temos que tratar essa questão de horário? ~ 
+ [OK] cada Disciplina possui 4 horas e orientandos possuem 2 ou 4 horas
  [OK] cada Professor pode Orientar Alunos de Graduação  
  [OK] se Professor Doutor, então: 
          [OK] pode orientar Alunos de Mestrado ou Doutorado
@@ -12,8 +13,6 @@
  [OK] todos os Professores devem ter 8 atividades de alocação, cada uma de duas ou quatro horas; 
         caso contrário, o professor estará classificado como Atividade Insuficiente. 
          ~ temos que tratar essa questão de horário? ~ 
- [] Dois Docentes podem dividir a mesma disciplinas 
- [] Horas como classificação de atividades. 
 */
 
 module AlocacaoProfessoresDSC
@@ -23,9 +22,7 @@ module AlocacaoProfessoresDSC
 --------------------------------------------------------------------------------------
 abstract sig Docente {
 	disciplinas : set Disciplina,
-	orientandos : set Orientando,
-	atividadesExtras: set AtividadeExtra
-	
+	orientandos : set Orientando 
 }
 
 sig AtividadeSuficiente in Docente {}
@@ -34,14 +31,17 @@ sig AtividadeInsuficiente in Docente {}
 sig Professor extends Docente {}
 sig Doutor extends Docente {}
 
-abstract sig Atividade{}
-
 abstract sig Disciplina extends Atividade{}
 
-sig AtividadeExtra extends Atividade {}
-
+abstract sig Atividade {	
+	horas: some Hora
+}
 sig DisciplinaDeGraduacao extends Disciplina {}
 sig DisciplinaDePosGraduacao extends Disciplina {} -- Apenas professores com titulo de Doutor
+
+abstract sig Hora{}
+
+sig duas, quatro extends Hora{}
 
 abstract sig Orientando extends Atividade{}
 sig Graduando extends Orientando {}
@@ -57,23 +57,19 @@ fact DocenteTemDuasOuTresDisciplinas {
 }
 
 fact DocenteComAtividadesSuficientes {
-	all d: Docente | docenteTemOitoOuMaisAtividades[d] <=> docenteComAtividadeSuficiente[d]
+	all d: Docente | docentePossuiAtividadeSuficiente[d] <=> docenteComAtividadeSuficiente[d]
 }
 
 fact DocentesComAtividadesInsuficientes {
-	all d: Docente | docenteTemMenosDeOitoAtividades[d] <=> docenteComAtividadeInsuficiente[d]
+	all d: Docente | (docenteTemMenosDeOitoAtividades[d] and docenteTemMenosDe20HorasDeAtividades[d]) <=> docenteComAtividadeInsuficiente[d]
 }
 
-fact DisciplinaTemUmOuDoisDocente { -- falta assert 
-	all d : Disciplina | disciplinaTemUmOuDoisDocente[d]
+fact DisciplinaTemApenasUmDocente{ -- falta assert 
+	all d: Disciplina| one d.~disciplinas
 }
 
 fact OrientandoTemApenasUmOrientador { 
 	all o : Orientando | one o.~orientandos
-}
-
-fact AtividadeExtraTemPeloMenosUmDocente {
-	all a: AtividadeExtra | some a.~atividadesExtras
 }
 
 fact ProfessorOrientaApenasGraduando {
@@ -84,6 +80,14 @@ fact ProfessorLecionaApenasDisciplinaDeGraduacao {
 	all p : Professor | professorLecionaApenasDisciplinaDeGraduacao[p]
 }
 
+fact DisciplinaPossuiXHoras {
+	all d: Disciplina | disciplinaPossuiXHoras[d]
+}
+
+fact OrientandoPossuiXHoras{
+	all o: Orientando | orientandoPossuiXHoras[o]
+}
+
 --------------------------------------------------------------------------------------
 --   PREDICADOS (Mínimo 3) 
 --------------------------------------------------------------------------------------
@@ -92,20 +96,36 @@ pred docentesComDuasOuTresDisciplinas[d : Docente] {
 	#(d.disciplinas) >= 2 and #(d.disciplinas) <= 3
 }
 
-pred docenteTemOitoOuMaisAtividades[d : Docente] {
-	totalDeAtividades[d] >= 8
+
+pred docentePossuiAtividadeSuficiente[d: Docente]{
+	(docenteTemMenosDeOitoAtividades[d] and  docenteTem20HorasDeAtividades[d]) or (docenteTemOitoAtividades[d] and docenteTem20HorasOuMenosDeAtividades[d])
 }
 
-pred disciplinaTemUmOuDoisDocente[d: Disciplina] {
-	#(d.~disciplinas) = 1 or #(d.~disciplinas) = 2
+pred docentePossuiAtividadeInsuficiente[d: Docente]{
+	docenteTemMenosDeOitoAtividades[d] and docenteTemMenosDe20HorasDeAtividades[d]
+}
+pred docenteTemMenosDeOitoAtividades[d : Docente] {
+	#(d.disciplinas + d.orientandos) < 8 
+}
+
+pred docenteTemOitoAtividades[d : Docente] {
+	#(d.disciplinas + d.orientandos ) = 8 
+}
+
+pred docenteTem20HorasDeAtividades[d: Docente]{
+	#(d.disciplinas.horas + d.orientandos.horas) = 20 --Como pega essas horas
+}
+
+pred docenteTem20HorasOuMenosDeAtividades[d: Docente]{
+	#(d.disciplinas.horas + d.orientandos.horas) <= 20 --Como pega essas horas
+}
+
+pred docenteTemMenosDe20HorasDeAtividades[d: Docente]{
+	#(d.disciplinas.horas + d.orientandos.horas) <  20 --Como pega essas horas
 }
 
 pred docenteComAtividadeSuficiente[d : Docente] {
 	 d in AtividadeSuficiente
-}
-
-pred docenteTemMenosDeOitoAtividades[d : Docente] {
-	totalDeAtividades[d] < 8
 }
 
 pred docenteComAtividadeInsuficiente[d : Docente] {
@@ -118,6 +138,14 @@ pred professorOrientaApenasGraduando[p : Professor] {
 
 pred professorLecionaApenasDisciplinaDeGraduacao[p : Professor] {
 	#(disciplinaDePosGraduacaoDeDocente[p]) = 0
+}
+
+pred disciplinaPossuiXHoras[d: Disciplina] {
+	#(d.horas) = 4
+}
+
+pred orientandoPossuiXHoras[o: Orientando]{
+	#(o.horas) = 2 or #(o.horas) = 4
 }
 
 --------------------------------------------------------------------------------------
@@ -136,51 +164,37 @@ fun disciplinaDePosGraduacaoDeDocente [d : Docente] : set Disciplina {
 	d.disciplinas & DisciplinaDePosGraduacao
 }
 
-fun totalDeAtividades[d: Docente] : Int{
-	#(d.disciplinas + d.orientandos + d.atividadesExtras)
-}
 --------------------------------------------------------------------------------------
 --   ASSERTS  (Mínimo 3 definições e 3 verificações) 
 --------------------------------------------------------------------------------------
-
 assert todoDocenteTemDuasOuTresDisciplinas {
     all d : Docente | #(d.disciplinas) >= 2 and #(d.disciplinas) <= 3
 }
-
 
 assert todoProfessorOrientaApenasGraduando {
     all p : Professor | #(mestrandosDeDocente[p]) = 0 and #(doutorandosDeDocente[p]) = 0
 }
 
-
-
 assert todoProfessorTemApenasDisciplinasDeGraduacao {
     all p : Professor | #(disciplinaDePosGraduacaoDeDocente[p]) = 0
 }
 
-
-
 assert todoDocenteQueTemMenosQueOitoCadeirasTemAtividadeInsuficiente {
-	all d: Docente | totalDeAtividades[d] < 8 => docenteComAtividadeInsuficiente[d]
+	all d: Docente | #(d.disciplinas + d.orientandos) < 8 => docenteComAtividadeInsuficiente[d]
 }
-
 
 assert todoOrientandoTemApenasUmOrientador {
 	all o: Orientando | #(o.~orientandos) = 1
 }
 
-
-
 assert todoDocenteTemClassificacaoDeAtividadeUnica {
 	all d: Docente | (d in AtividadeSuficiente and d !in AtividadeInsuficiente) or (d in AtividadeInsuficiente and d !in AtividadeSuficiente)
 }
-
-
 
 --------------------------------------------------------------------------------------
 --   SHOW 
 --------------------------------------------------------------------------------------
 
-pred show[]{ #Docente > 3}
+pred show[]{}
 
 run show for 8
