@@ -2,7 +2,6 @@
  Tema 7 em https://docs.google.com/document/d/1aTb65qho0WhN38dV2OWL_4ppcrV-U2u7l6jJVrZxXwY/pub
  TODO:
  [OK] cada Professor ministra duas ou três Disciplinas de 4 horas semanais 
-          ~ temos que tratar essa questão de horário? ~ 
  [OK] cada Professor pode Orientar Alunos de Graduação  
  [OK] se Professor Doutor, então: 
          [OK] pode orientar Alunos de Mestrado ou Doutorado
@@ -11,7 +10,6 @@
          [OK] Não Doutores não podem ministrar aulas de PosGraduação
  [OK] todos os Professores devem ter 8 atividades de alocação, cada uma de duas ou quatro horas; 
         caso contrário, o professor estará classificado como Atividade Insuficiente. 
-         ~ temos que tratar essa questão de horário? ~ 
  [OK] Dois Docentes podem dividir a mesma Disciplina 
  [OK] Horas como classificação de atividades.
 */
@@ -81,7 +79,7 @@ fact AtividadeExtraTemPeloMenosUmDocente {
 	all a: AtividadeExtra | some a.~atividadesExtras
 }
 
-fact DuasOuQuatroHoras { -- falta Assert
+fact DuasOuQuatroHoras {
 	(all a: AtividadeExtra | (a in AtividadeExtraDeDuasHoras and a !in AtividadeExtraDeQuatroHoras) or 
 										 (a in AtividadeExtraDeQuatroHoras and a !in AtividadeExtraDeDuasHoras)) and
 	(all o: Orientando | (o in OrientacaoDeDuasHoras and o !in OrientacaoDeQuatroHoras) or 
